@@ -123,6 +123,8 @@ class Sensors:
         self.humidity = 60.0
         self.presence = False
         self.light = 1000
+        self.ac_status = False
+        self.room_light = False
         
     def read_temperature(self):
         # Simula variação de temperatura
@@ -150,6 +152,18 @@ class Sensors:
             base = 100
         return base + random.randint(-50, 50)
 
+    def read_ac_status(self):
+        # Simula status do ar condicionado
+        if random.random() < 0.05:  # 5% de chance de mudar
+            self.ac_status = not self.ac_status
+        return self.ac_status
+
+    def read_room_light(self):
+        # Simula status da luz da sala
+        if random.random() < 0.05:  # 5% de chance de mudar
+            self.room_light = not self.room_light
+        return self.room_light
+
 def main():
     # Inicializa sensores e MQTT
     sensors = Sensors()
@@ -173,6 +187,8 @@ def main():
             hum = sensors.read_humidity()
             pres = sensors.read_presence()
             light = sensors.read_light()
+            ac_status = sensors.read_ac_status()
+            room_light = sensors.read_room_light()
             
             # Prepara mensagens
             dht_data = {
@@ -184,15 +200,17 @@ def main():
             client.publish("esp32/dht", json.dumps(dht_data))
             client.publish("esp32/pir", json.dumps({"presence": pres}))
             client.publish("esp32/ldr", json.dumps({"light": light}))
+            client.publish("esp32/ac_status", json.dumps({"status": "ligado" if ac_status else "desligado"}))
+            client.publish("esp32/room_light", json.dumps({"status": "ligada" if room_light else "desligada"}))
             
-            print(f"Dados enviados - Temp: {temp}°C, Hum: {hum}%, Presença: {pres}, Luz: {light}")
+            print(f"Dados enviados - Temp: {temp}°C, Hum: {hum}%, Presença: {pres}, Luz: {light}, AC: {'ligado' if ac_status else 'desligado'}, Luz Sala: {'ligada' if room_light else 'desligada'}")
             time.sleep(5)
         except Exception as e:
             print(f"Erro: {e}")
             time.sleep(5)
 
 if __name__ == "__main__":
-    main()
+    main() 
 EOF
 
 # Tornar o arquivo executável
